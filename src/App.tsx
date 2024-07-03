@@ -1,5 +1,6 @@
 import "./App.css";
-import VirtualList, { ColumnProps } from "./components/VirtualList";
+import { ColumnProps } from "./components/VirtualList";
+import VirtualTree from "./components/VirtualTree";
 
 const getList = (conunt: number) => {
   return new Array(conunt).fill(0).map((_, index) => ({
@@ -40,7 +41,7 @@ function App() {
       <div className="aaa1">aaa1</div>
       <div className="aaa2">
         <div className="aaa3">aaa3</div>
-        <VirtualList
+        <VirtualTree
           list={list}
           column={column}
           rowKey={rowKey}
