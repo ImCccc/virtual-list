@@ -1,0 +1,40 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+
+.aaa {
+  position: fixed;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  border: 2px solid;
+  display: flex;
+}
+
+.aaa1 {
+  flex-shrink: 0;
+  width: 100px;
+  background: yellow;
+  height: 100%;
+}
+
+.aaa2 {
+  /* padding: 20px; */
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+  height: 100%;
+}
+
+
+.aaa3 {
+  flex-shrink: 0;
+  height: 60px;
+  background: yellow;
+}

@@ -1,0 +1,44 @@
+._vlist_,
+._vlist_ div, 
+._vlist_ table, 
+._vlist_ tr, 
+._vlist_ td, 
+._vlist_ span {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+} 
+
+
+
+._vlist_ .table {
+  min-width: 100%;
+  border-spacing: 0;
+  border-collapse: separate;
+}
+
+/* 边框 */
+._vlist_.border td {
+  border-bottom: 1px solid red;
+  border-right: 1px solid red;
+}
+._vlist_.border td:first-child {
+  border-left: 1px solid red;
+}
+._vlist_.border .virtual-scroll tr:first-child td {
+  border-top: 1px solid red;
+}
+
+._vlist_ .table-cell {
+  padding: 0 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; 
+}
+
+
+.virtual-scroll {
+  width: 100%;
+  overflow: auto;
+}
+

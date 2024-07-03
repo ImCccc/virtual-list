@@ -1,0 +1,81 @@
+
+.table-wrap {
+  position: relative;
+  padding: 10px;
+}
+
+.container {
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.grow1 {
+  flex-grow: 1;
+}
+
+.table-content {
+  overflow: hidden;
+  height: 100%;
+  flex-grow: 1;
+}
+
+.fixed {
+  overflow: hidden;
+  height: calc(100%) ;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  background: #fff;
+}
+
+.col {
+  display: flex;
+  position: relative;
+}
+
+.text-ellipsis {
+  width: 100%;
+  padding: 0 10px;
+  overflow: hidden;
+  white-space: nowrap; 
+  text-overflow: ellipsis;
+}
+
+.col-cell {
+  flex-grow: 1;
+  flex-shrink: 0;
+  min-width: 60px;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+}
+.col-cell:first-child {
+  border-left: 1px solid #ccc;
+}
+.col:first-child .col-cell{
+  border-top: 1px solid #ccc;
+}
+
+
+
+
+.fix-scroll {
+  width: 30px;
+  flex-shrink: 0;
+}
+
+.scroll-x {
+  overflow-y: hidden;
+  overflow-x: auto;
+}
+
+.scroll-y {
+  display: flex;
+  overflow: auto;
+  width: 20px;
+  height: 100%;
+  flex-shrink: 0;
+}
