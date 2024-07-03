@@ -33,10 +33,15 @@ const Comp: React.FC<TableProps> = ({
 }) => {
   const scrollRef = useRef<any>();
   const contentRef = useRef<any>();
+
   // 显示多少条数据
   const [showData, setShowData] = useState<any[]>([]);
+
   // 虚拟滚动高度
-  const scrollHeight = useMemo(() => list.length * itemHeight, []);
+  const scrollHeight = useMemo(
+    () => list.length * itemHeight,
+    [itemHeight, list.length]
+  );
 
   // 固定的列
   const columns = useMemo(() => {
@@ -44,7 +49,7 @@ const Comp: React.FC<TableProps> = ({
     const right = column.filter((col) => col.fixed === "right");
     const all = [...left, ...column.filter((col) => !col.fixed), ...right];
     return { left, right, all };
-  }, []);
+  }, [column]);
 
   const [contentHeight, setContentHeight] = useState(0);
   useEffect(() => {
