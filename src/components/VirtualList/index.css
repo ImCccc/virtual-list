@@ -20,14 +20,10 @@
   flex-grow: 1;
 }
 
-.fixed {
-  overflow: hidden;
-  height: calc(100%) ;
+.table-fixed {
   position: absolute;
   top: 0;
-  left: 0;
   z-index: 2;
-  background: #fff;
 }
 
 .col {
@@ -49,6 +45,7 @@
   min-width: 60px;
   display: flex;
   align-items: center;
+  background-color: #fff;
   border-right: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
 }
@@ -61,21 +58,15 @@
 
 
 
-
-.fix-scroll {
-  width: 30px;
-  flex-shrink: 0;
-}
-
 .scroll-x {
   overflow-y: hidden;
   overflow-x: auto;
 }
 
 .scroll-y {
-  display: flex;
-  overflow: auto;
-  width: 20px;
+  z-index: 5;
   height: 100%;
   flex-shrink: 0;
+  display: flex;
+  overflow: auto;
 }

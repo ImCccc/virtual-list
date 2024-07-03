@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./index.css";
 
 export type ColumnProps = {
@@ -7,6 +6,7 @@ export type ColumnProps = {
   title: string;
   width?: number;
   rowKey?: string;
+  fixed?: "left" | "right" | true;
 };
 
 export type TableProps = {
@@ -28,37 +28,49 @@ const getList = (conunt: number) => {
 };
 
 const column: ColumnProps[] = [
-  { width: 200, title: "序号", key: "index" },
-  // { width: 100, title: "内容都是开发", key: "id" },
-  { width: 200, title: "内容", key: "name" },
-  { width: 200, title: "地址", key: "address" },
+  { width: 200, fixed: true, title: "序号", key: "index" },
+  { width: 100, fixed: "right", title: "内容都是开发", key: "id" },
+  { width: 250, fixed: "right", title: "内容", key: "name" },
+  { width: 600, title: "地址", key: "address" },
   { width: 200, title: "嘻嘻嘻", key: "content" },
 ];
 
 const list = getList(500);
-
 const itemHeight = 40;
 const tableHeight = undefined;
 const tableWidth = undefined;
-const showItemLength = 20;
 const rowKey = "id";
+const showLength = 20;
+const scrollWidth = 20;
 
 let scrollTop = 0;
 
 const Comp: React.FC = () => {
-  const listRef = useRef<any>();
   const scrollRef = useRef<any>();
-
+  const contentRef = useRef<any>();
   // 显示多少条数据
-  const [showData, setShowData] = useState(list.slice(0, showItemLength));
+  const [showData, setShowData] = useState<any[]>([]);
   // 虚拟滚动高度
   const scrollHeight = useMemo(() => list.length * itemHeight, []);
+  // 固定的列
+  const fixedColumn = useMemo(() => {
+    return {
+      left: column.filter((col) => col.fixed === "left" || col.fixed === true),
+      right: column.filter((col) => col.fixed === "right"),
+    };
+  }, []);
+
+  const [contentHeight, setContentHeight] = useState(0);
+  useEffect(() => {
+    setShowData(list.slice(0, showLength));
+    setTimeout(() => setContentHeight(contentRef.current.clientHeight), 100);
+  }, []);
 
   // 滚动Y轴
   const onScrollY = (e: React.UIEvent<HTMLDivElement>) => {
     scrollTop = e.currentTarget.scrollTop;
     const start = Math.round(scrollTop / itemHeight);
-    const newShowData = list.slice(start, start + showItemLength);
+    const newShowData = list.slice(start, start + showLength);
     setShowData(newShowData);
   };
 
@@ -76,58 +88,83 @@ const Comp: React.FC = () => {
       : { width: tableWidth, flexGrow: 1 };
   }, []);
 
-  return (
-    <div className="container" style={containerStyle}>
-      {/* 固定在左侧的列 */}
-      {/* <div className="fixed" onWheel={onWheel}>
-          {showData.map((item, index) => (
-            <div
-              key={index}
-              className="col"
-              style={{ height: itemHeight, lineHeight: `${itemHeight}px` }}
-            >
-              <div className="col-cell" style={{ width: 200 }}>
-                {item}
-              </div>
-            </div>
-          ))}
-        </div> */}
+  // 获取表头
+  const getTableHeader = (_cols: ColumnProps[]) => (
+    <div className="col" style={{ height: itemHeight }}>
+      {_cols.map((col, index) => (
+        <div
+          className="col-cell"
+          key={col.key || index}
+          style={{ width: col.width }}
+        >
+          <span className="text-ellipsis">{col.title}</span>
+        </div>
+      ))}
+    </div>
+  );
 
-      <div ref={listRef} onWheel={onWheel} className="table-content scroll-x">
-        {/* 表头 */}
-        <div className="col" style={{ height: itemHeight }}>
-          {column.map((col, index) => (
+  // 获取列
+  const getTableColumn = (_cols: ColumnProps[]) => (
+    <>
+      {showData.map((item: any, index) => (
+        <div
+          className="col"
+          key={item[rowKey] || index}
+          style={{ height: itemHeight }}
+        >
+          {_cols.map((col, index) => (
             <div
               className="col-cell"
               key={col.key || index}
               style={{ width: col.width }}
             >
-              <span className="text-ellipsis">{col.title}</span>
+              <span className="text-ellipsis">{item[col.key]}</span>
             </div>
           ))}
         </div>
-        {/* 数据 */}
-        {showData.map((item: any, index) => (
-          <div
-            className="col"
-            key={item[rowKey] || index}
-            style={{ height: itemHeight }}
-          >
-            {column.map((col, index) => (
-              <div
-                className="col-cell"
-                key={col.key || index}
-                style={{ width: col.width }}
-              >
-                <span className="text-ellipsis">{item[col.key]}</span>
-              </div>
-            ))}
-          </div>
-        ))}
+      ))}
+    </>
+  );
+
+  const getFixedCol = (_column: ColumnProps[], fixed: ColumnProps["fixed"]) => {
+    return (
+      <div
+        onWheel={onWheel}
+        className="table-content table-fixed"
+        style={
+          fixed === "right"
+            ? { height: contentHeight, right: scrollWidth }
+            : { height: contentHeight, left: 0 }
+        }
+      >
+        {getTableHeader(_column)}
+        {getTableColumn(_column)}
+      </div>
+    );
+  };
+
+  return (
+    <div className="container" style={containerStyle}>
+      {/* 固定的列 */}
+      {getFixedCol(fixedColumn.left, "left")}
+      {getFixedCol(fixedColumn.right, "right")}
+      {/* 其他列 */}
+      <div
+        ref={contentRef}
+        onWheel={onWheel}
+        className="table-content scroll-x"
+      >
+        {getTableHeader(column)}
+        {getTableColumn(column)}
       </div>
       {/* 滚动条Y */}
-      <div ref={scrollRef} className="scroll-y" onScroll={onScrollY}>
-        <div style={{ height: scrollHeight + itemHeight }}></div>
+      <div
+        ref={scrollRef}
+        className="scroll-y"
+        onScroll={onScrollY}
+        style={{ width: scrollWidth }}
+      >
+        <div style={{ height: scrollHeight + itemHeight + 20 }}></div>
       </div>
     </div>
   );
