@@ -1,3 +1,4 @@
+import classNames from "classnames";
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./index.css";
 
@@ -5,66 +6,51 @@ export type ColumnProps = {
   key: string;
   title: string;
   width?: number;
-  rowKey?: string;
-  fixed?: "left" | "right" | true;
+  fixed?: "left" | "right";
 };
 
 export type TableProps = {
   list: any[];
+  rowKey?: string;
   column: ColumnProps[];
   itemHeight?: number;
   tableHeight?: number;
+  tableWidth?: number;
 };
 
-const getList = (conunt: number) => {
-  return new Array(conunt).fill(0).map((_, index) => ({
-    index: index + 1,
-    id: Math.random(),
-    name: "xxxx",
-    address: "xds,是多少范德萨第三方第三方dsfdsf发送到",
-    content: "dfsd地方",
-    xxx: "xxx都是开发就",
-  }));
-};
-
-const column: ColumnProps[] = [
-  { width: 200, fixed: true, title: "序号", key: "index" },
-  { width: 100, fixed: "right", title: "内容都是开发", key: "id" },
-  { width: 250, fixed: "right", title: "内容", key: "name" },
-  { width: 600, title: "地址", key: "address" },
-  { width: 200, title: "嘻嘻嘻", key: "content" },
-];
-
-const list = getList(500);
-const itemHeight = 40;
-const tableHeight = undefined;
-const tableWidth = undefined;
-const rowKey = "id";
-const showLength = 20;
 const scrollWidth = 20;
-
+// 真实dom的条数
+const showLength = 20;
 let scrollTop = 0;
 
-const Comp: React.FC = () => {
+const Comp: React.FC<TableProps> = ({
+  list,
+  rowKey,
+  column,
+  tableWidth,
+  tableHeight,
+  itemHeight = 40,
+}) => {
   const scrollRef = useRef<any>();
   const contentRef = useRef<any>();
   // 显示多少条数据
   const [showData, setShowData] = useState<any[]>([]);
   // 虚拟滚动高度
   const scrollHeight = useMemo(() => list.length * itemHeight, []);
+
   // 固定的列
-  const fixedColumn = useMemo(() => {
-    return {
-      left: column.filter((col) => col.fixed === "left" || col.fixed === true),
-      right: column.filter((col) => col.fixed === "right"),
-    };
+  const columns = useMemo(() => {
+    const left = column.filter((col) => col.fixed === "left");
+    const right = column.filter((col) => col.fixed === "right");
+    const all = [...left, ...column.filter((col) => !col.fixed), ...right];
+    return { left, right, all };
   }, []);
 
   const [contentHeight, setContentHeight] = useState(0);
   useEffect(() => {
     setShowData(list.slice(0, showLength));
     setTimeout(() => setContentHeight(contentRef.current.clientHeight), 100);
-  }, []);
+  }, [list]);
 
   // 滚动Y轴
   const onScrollY = (e: React.UIEvent<HTMLDivElement>) => {
@@ -86,16 +72,16 @@ const Comp: React.FC = () => {
     return tableHeight
       ? { width: tableWidth, height: tableHeight }
       : { width: tableWidth, flexGrow: 1 };
-  }, []);
+  }, [tableHeight, tableWidth]);
 
   // 获取表头
   const getTableHeader = (_cols: ColumnProps[]) => (
     <div className="col" style={{ height: itemHeight }}>
       {_cols.map((col, index) => (
         <div
-          className="col-cell"
           key={col.key || index}
           style={{ width: col.width }}
+          className={classNames("col-cell", { grow1: !col.fixed })}
         >
           <span className="text-ellipsis">{col.title}</span>
         </div>
@@ -109,14 +95,14 @@ const Comp: React.FC = () => {
       {showData.map((item: any, index) => (
         <div
           className="col"
-          key={item[rowKey] || index}
+          key={rowKey ? item[rowKey] : index}
           style={{ height: itemHeight }}
         >
           {_cols.map((col, index) => (
             <div
-              className="col-cell"
               key={col.key || index}
               style={{ width: col.width }}
+              className={classNames("col-cell", { grow1: !col.fixed })}
             >
               <span className="text-ellipsis">{item[col.key]}</span>
             </div>
@@ -127,6 +113,7 @@ const Comp: React.FC = () => {
   );
 
   const getFixedCol = (_column: ColumnProps[], fixed: ColumnProps["fixed"]) => {
+    if (!_column.length) return <></>;
     return (
       <div
         onWheel={onWheel}
@@ -142,20 +129,19 @@ const Comp: React.FC = () => {
       </div>
     );
   };
-
   return (
     <div className="container" style={containerStyle}>
       {/* 固定的列 */}
-      {getFixedCol(fixedColumn.left, "left")}
-      {getFixedCol(fixedColumn.right, "right")}
+      {getFixedCol(columns.left, "left")}
+      {getFixedCol(columns.right, "right")}
       {/* 其他列 */}
       <div
         ref={contentRef}
         onWheel={onWheel}
         className="table-content scroll-x"
       >
-        {getTableHeader(column)}
-        {getTableColumn(column)}
+        {getTableHeader(columns.all)}
+        {getTableColumn(columns.all)}
       </div>
       {/* 滚动条Y */}
       <div
