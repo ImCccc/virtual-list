@@ -85,7 +85,7 @@ const Comp: React.FC<TableProps> = ({
     <div className="col" style={{ height: itemHeight }}>
       {_cols.map((col, index) => (
         <div
-          key={col.key || index}
+          key={index}
           style={{ width: col.width }}
           className={classNames("col-cell", { grow1: !col.fixed })}
         >
@@ -106,7 +106,7 @@ const Comp: React.FC<TableProps> = ({
         >
           {_cols.map((col, colIndex) => (
             <div
-              key={col.key || colIndex}
+              key={colIndex}
               style={{ width: col.width }}
               className={classNames("col-cell", { grow1: !col.fixed })}
             >

@@ -3,18 +3,31 @@ import { ColumnProps } from "./components/VirtualList";
 import VirtualTree from "./components/VirtualTree";
 
 const getList = (conunt: number) => {
-  return new Array(conunt).fill(0).map((_, index) => ({
-    index: index + 1,
-    id: Math.random(),
-    name: Math.random(),
+  return new Array(conunt).fill(0).map(() => ({
     address: Math.random(),
-    content: Math.random(),
-    xxx: Math.random(),
+    children: [
+      {
+        address: Math.random(),
+        children: [
+          {
+            address: Math.random(),
+            children: [{ address: Math.random() }],
+          },
+        ],
+      },
+      {
+        address: Math.random(),
+        children: [{ address: Math.random() }],
+      },
+      { address: Math.random() },
+      { address: Math.random() },
+    ],
   }));
 };
 
 const column: ColumnProps[] = [
-  { width: 100, fixed: "left", title: "序号", key: "index" },
+  { width: 200, fixed: "left", title: "地址", key: "address" },
+  // { width: 100, title: "序号", key: "index" },
   // { width: 100, fixed: "right", title: "内容都是开发", key: "id" },
   {
     width: 200,
@@ -24,16 +37,15 @@ const column: ColumnProps[] = [
   },
   { width: 200, title: "地址", key: "address" },
   { width: 200, title: "地址", key: "address" },
-  { width: 200, title: "地址", key: "address" },
   // { width: 200, title: "地址", key: "address" },
   // { width: 100, title: "嘻嘻嘻", key: "content" },
   // { width: 150, fixed: "right", title: "内容", key: "name" },
 ];
 
-const list = getList(5000);
+const list = getList(10);
 const tableHeight = undefined;
 const tableWidth = undefined;
-const rowKey = "id";
+const rowKey = "address";
 
 function App() {
   return (
@@ -45,6 +57,7 @@ function App() {
           list={list}
           column={column}
           rowKey={rowKey}
+          // defaultExpandAllRows={false}
           tableWidth={tableWidth}
           tableHeight={tableHeight}
         />
