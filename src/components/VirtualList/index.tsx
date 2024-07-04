@@ -30,6 +30,7 @@ export type OnSelectProps = (
 export type OnSelectAllProps = (
   selected: boolean,
   allRowKeys: SelectKeysProps
+  // changeRowKeys: SelectKeysProps
 ) => void;
 export type RowSelectionProps = {
   selectedRowKeys: SelectKeysProps; // 选中项的 key 数组，需要和 onChange 进行配合
@@ -97,12 +98,43 @@ const Comp: React.FC<TableProps> = ({
     [itemHeight, list.length]
   );
 
+  // 选中的数据转为对象形式
+  const selectedKeysObj = useMemo<{ [k: string]: boolean }>(() => {
+    return rowSelection
+      ? rowSelection.selectedRowKeys.reduce(
+          (obj, cur) => ({ ...obj, [cur]: true }),
+          {} as { [k: string]: boolean }
+        )
+      : {};
+  }, [rowSelection]);
+
   const selectAllStatus = useMemo(() => {
-    const selectedLen = rowSelection?.selectedRowKeys.length;
-    if (!selectedLen) return <UnCheckIcon className="pointer" />;
-    if (selectedLen === list.length) return <CheckIcon className="pointer" />;
-    return <SomeCheckIcon className="pointer" />;
-  }, [list.length, rowSelection?.selectedRowKeys]);
+    if (!rowSelection) return;
+    const { selectedRowKeys, onSelectAll, disabledKeys } = rowSelection;
+    const selectedLen = selectedRowKeys.length;
+    const allKeys = list
+      .map((item) => item[rowKey])
+      .filter((id) => selectedKeysObj[id] || !disabledKeys?.includes(id));
+
+    const checkAll = () => onSelectAll?.(true, allKeys);
+    if (!selectedLen) {
+      // 完全未选择
+      return <UnCheckIcon className="pointer" onClick={checkAll} />;
+    }
+    if (selectedLen !== allKeys.length) {
+      // 选择了一些
+      return <SomeCheckIcon className="pointer" onClick={checkAll} />;
+    }
+    const disabledCheckKeys =
+      disabledKeys?.filter((id) => selectedKeysObj[id]) || [];
+    return (
+      // 已经全选
+      <CheckIcon
+        className="pointer"
+        onClick={() => onSelectAll?.(true, disabledCheckKeys)}
+      />
+    );
+  }, [list, rowKey, rowSelection, selectedKeysObj]);
 
   const getSelectdColumn = useCallback(() => {
     if (!rowSelection) return null;
@@ -126,14 +158,15 @@ const Comp: React.FC<TableProps> = ({
       fixed: fixed ? "left" : undefined,
       render: ({ row }) => {
         const id = row[rowKey || "id"];
-        const disabled = disabledKeys?.includes(id);
-
+        const iconProps = {
+          className: "pointer",
+          disabled: disabledKeys?.includes(id),
+        };
         if (type === "checkbox") {
           // 多选
           return selectedRowKeys.includes(id) ? (
             <CheckIcon
-              className="pointer"
-              disabled={disabled}
+              {...iconProps}
               onClick={() => {
                 const curKeys = selectedRowKeys.filter((_id) => id !== _id);
                 onSelect?.(curKeys, false, row);
@@ -141,8 +174,7 @@ const Comp: React.FC<TableProps> = ({
             />
           ) : (
             <UnCheckIcon
-              className="pointer"
-              disabled={disabled}
+              {...iconProps}
               onClick={() => {
                 const curKeys = Array.from(new Set([...selectedRowKeys, id]));
                 onSelect?.(curKeys, true, row);
@@ -151,10 +183,9 @@ const Comp: React.FC<TableProps> = ({
           );
         }
         // 单选
-        return selectedRowKeys.includes(id) ? (
+        return selectedRowKeys[0] === id ? (
           <RadioCheckIcon
-            className="pointer"
-            disabled={disabled}
+            {...iconProps}
             onClick={() => {
               // 禁止操作的id, 刚好被选中
               if (disabledKeys?.includes(selectedRowKeys[0])) return;
@@ -163,8 +194,7 @@ const Comp: React.FC<TableProps> = ({
           />
         ) : (
           <RadioUnCheckIcon
-            className="pointer"
-            disabled={disabled}
+            {...iconProps}
             onClick={() => {
               // 禁止操作的id, 刚好被选中
               if (disabledKeys?.includes(selectedRowKeys[0])) return;

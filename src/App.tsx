@@ -57,7 +57,8 @@ const column: ColumnProps[] = [
 const list = getList(10);
 
 function App() {
-  const [selectedRowKeys, setselectedRowKeys] = useState<string[]>(["1"]);
+  const defval = ["1-1"];
+  const [selectedRowKeys, setselectedRowKeys] = useState<string[]>(defval);
 
   return (
     <div className="aaa">
@@ -74,13 +75,17 @@ function App() {
           // onRowClick={(row) => console.log(row)}
           // onRowDoubleClick={(row) => console.log(row)}
           rowSelection={{
-            type: "radio",
+            // type: "radio",
             fixed: true,
             selectedRowKeys,
             // hideSelectAll: true,
             disabledKeys: ["1-1"],
             onSelect: (selectedRowKeys) => {
               setselectedRowKeys(selectedRowKeys);
+            },
+            onSelectAll: (selected, allRowKeys) => {
+              setselectedRowKeys(allRowKeys);
+              console.log(selected, allRowKeys);
             },
           }}
         />
