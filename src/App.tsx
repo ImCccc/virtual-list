@@ -20,20 +20,13 @@ const getList = (conunt: number) => {
         children: [{ address: Math.random() }],
       },
       { address: Math.random() },
-<<<<<<< HEAD
-=======
       { address: Math.random() },
->>>>>>> f82b72424893754fb245b3f9fd7edb5b9d3d517a
     ],
   }));
 };
 
 const column: ColumnProps[] = [
-<<<<<<< HEAD
-  { width: 200, fixed: "left", title: "地址", key: "_level" },
-=======
   { width: 200, fixed: "left", title: "地址", key: "address" },
->>>>>>> f82b72424893754fb245b3f9fd7edb5b9d3d517a
   // { width: 100, title: "序号", key: "index" },
   // { width: 100, fixed: "right", title: "内容都是开发", key: "id" },
   {

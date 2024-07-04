@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { useMemo } from "react";
-=======
 import { useCallback, useMemo, useState } from "react";
->>>>>>> f82b72424893754fb245b3f9fd7edb5b9d3d517a
 import VirtualList, { TableProps } from "../VirtualList";
 import "./index.css";
 
@@ -12,16 +8,6 @@ export type VirtualTreeProps = {
   defaultExpandAllRows?: boolean;
 };
 
-<<<<<<< HEAD
-// 数组打平
-const flatten = (list: any[], allList = [], _level = 0) => {
-  return [
-    ...allList,
-    ...list.reduce((all, { children, ...item }) => {
-      all.push({ ...item, _level });
-      if (children && children.length) {
-        flatten(children, allList, _level + 1);
-=======
 const PlusSquareOutlined: React.FC<{ onClick: any }> = ({ onClick }) => {
   return (
     <span className="add-icon" onClick={onClick}>
@@ -50,23 +36,12 @@ const flatten = (list: any[], allList = [], parentId?: string, _level = 0) => {
       all.push(item);
       if (item._hasChild) {
         flatten(item.children, allList, item._uuid, _level + 1);
->>>>>>> f82b72424893754fb245b3f9fd7edb5b9d3d517a
       }
       return all;
     }, allList),
   ];
 };
 
-<<<<<<< HEAD
-const Comp: React.FC<TableProps & VirtualTreeProps> = ({ list, ...props }) => {
-  console.log(flatten(list));
-
-  const flattenList = useMemo(() => {
-    return flatten(list);
-  }, [list]);
-
-  return <VirtualList list={flattenList} {...props} />;
-=======
 const Comp: React.FC<TableProps & VirtualTreeProps> = ({
   list,
   column,
@@ -132,7 +107,6 @@ const Comp: React.FC<TableProps & VirtualTreeProps> = ({
   }, [column, foldSpan, getExpandIcon]);
 
   return <VirtualList column={treeColumn} list={showList} {...props} />;
->>>>>>> f82b72424893754fb245b3f9fd7edb5b9d3d517a
 };
 
 export default Comp;
