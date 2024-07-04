@@ -50,6 +50,7 @@ export type TableProps = {
   tableHeight?: number;
   tableWidth?: number;
   rowHoverBg?: string;
+  rowSelectedBg?: string;
   rowSelection?: RowSelectionProps;
   onRowClick?: EventProps;
   onRowMouseEnter?: EventProps;
@@ -65,12 +66,13 @@ let scrollTop = 0;
 const Comp: React.FC<TableProps> = ({
   list,
   column,
-  rowKey,
   tableWidth,
   tableHeight,
   rowSelection,
+  rowKey = "",
   itemHeight = 40,
   rowHoverBg = "#dcf4ff",
+  rowSelectedBg = "#dcf4ff",
   onRowClick,
   onRowMouseLeave,
   onRowMouseEnter,
@@ -211,44 +213,51 @@ const Comp: React.FC<TableProps> = ({
   );
 
   // 获取列
-  const getTableColumn = (_cols: ColumnProps[]) => (
-    <>
-      {showData.map((row: any, rowIndex) => (
-        <div
-          className="col"
-          key={rowKey ? row[rowKey] : rowIndex}
-          style={{
-            height: itemHeight,
-            background: hoverIndex === rowIndex ? rowHoverBg : "",
-          }}
-          onClick={(e) => onRowClick?.(row, e)}
-          onDoubleClick={(e) => onRowDoubleClick?.(row, e)}
-          onMouseEnter={(e) => {
-            setHoverIndex(rowIndex);
-            onRowMouseEnter?.(row, e);
-          }}
-          onMouseLeave={(e) => {
-            setHoverIndex(undefined);
-            onRowMouseLeave?.(row, e);
-          }}
-        >
-          {_cols.map((col, colIndex) => (
-            <div
-              key={colIndex}
-              style={{ width: col.width }}
-              className={classNames("col-cell", { grow1: !col.fixed })}
-            >
-              <span className="text-ellipsis" style={{ textAlign: col.aligin }}>
-                {col.render
-                  ? col.render({ row, col, value: row[col.key] })
-                  : row[col.key]}
-              </span>
-            </div>
-          ))}
-        </div>
-      ))}
-    </>
-  );
+  const getTableColumn = (_cols: ColumnProps[]) => {
+    const getBg = (rowIndex: number, id = "") => {
+      if (hoverIndex === rowIndex) return rowHoverBg;
+      if (rowSelection?.selectedRowKeys.includes(id)) return rowSelectedBg;
+      return "";
+    };
+    return showData.map((row: any, rowIndex) => (
+      <div
+        className="col"
+        key={row[rowKey] || rowIndex}
+        style={{
+          height: itemHeight,
+          background: getBg(rowIndex, row[rowKey]),
+        }}
+        onClick={(e) => {
+          onRowClick?.(row, e);
+        }}
+        onDoubleClick={(e) => {
+          onRowDoubleClick?.(row, e);
+        }}
+        onMouseEnter={(e) => {
+          setHoverIndex(rowIndex);
+          onRowMouseEnter?.(row, e);
+        }}
+        onMouseLeave={(e) => {
+          setHoverIndex(undefined);
+          onRowMouseLeave?.(row, e);
+        }}
+      >
+        {_cols.map((col, colIndex) => (
+          <div
+            key={colIndex}
+            style={{ width: col.width }}
+            className={classNames("col-cell", { grow1: !col.fixed })}
+          >
+            <span className="text-ellipsis" style={{ textAlign: col.aligin }}>
+              {col.render
+                ? col.render({ row, col, value: row[col.key] })
+                : row[col.key]}
+            </span>
+          </div>
+        ))}
+      </div>
+    ));
+  };
 
   const getFixedCol = (_column: ColumnProps[], fixed: ColumnProps["fixed"]) => {
     if (!_column.length) return <></>;

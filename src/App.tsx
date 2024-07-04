@@ -40,7 +40,7 @@ const getList = (conunt: number) => {
 const column: ColumnProps[] = [
   {
     width: 120,
-    // fixed: "left",
+    fixed: "left",
     title: "uuid",
     key: "_id",
   },
@@ -75,6 +75,7 @@ function App() {
           // onRowDoubleClick={(row) => console.log(row)}
           rowSelection={{
             type: "radio",
+            fixed: true,
             selectedRowKeys,
             onSelect: (selectedRowKeys) => {
               setselectedRowKeys(selectedRowKeys);
