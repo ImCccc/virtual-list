@@ -1,13 +1,45 @@
 import classNames from "classnames";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  CheckIcon,
+  RadioCheckIcon,
+  RadioUnCheckIcon,
+  SomeCheckIcon,
+  UnCheckIcon,
+} from "../Icon";
 import "./index.css";
 
 export type ColumnProps = {
   key: string;
-  title: string;
+  title: string | React.ReactNode;
   width?: number;
   fixed?: "left" | "right";
+  aligin?: "left" | "center" | "right";
   render?: (props: { value: any; row: any; col: any }) => React.ReactNode;
+};
+
+export type EventProps = (
+  record: any,
+  event: React.MouseEvent<HTMLDivElement, MouseEvent>
+) => void;
+
+export type SelectedKeysProps = string[];
+export type OnSelectProps = (
+  selectedRowKeys: SelectedKeysProps,
+  selected: boolean,
+  record: any
+) => void;
+export type OnSelectAllProps = (
+  selected: boolean,
+  allRowKeys: SelectedKeysProps
+) => void;
+export type RowSelectionProps = {
+  selectedRowKeys: SelectedKeysProps; // 选中项的 key 数组，需要和 onChange 进行配合
+  fixed?: boolean; // 把选择框列固定在左边
+  hideSelectAll?: boolean; // 隐藏全选勾选框
+  type?: "checkbox" | "radio"; // 多选/单选
+  onSelect?: OnSelectProps; // 用户手动选择/取消选择某行的回调
+  onSelectAll?: OnSelectAllProps; // 用户手动选择/取消选择所有行的回调
 };
 
 export type TableProps = {
@@ -17,6 +49,12 @@ export type TableProps = {
   itemHeight?: number;
   tableHeight?: number;
   tableWidth?: number;
+  rowHoverBg?: string;
+  rowSelection?: RowSelectionProps;
+  onRowClick?: EventProps;
+  onRowMouseEnter?: EventProps;
+  onRowMouseLeave?: EventProps;
+  onRowDoubleClick?: EventProps;
 };
 
 const scrollWidth = 20;
@@ -26,17 +64,32 @@ let scrollTop = 0;
 
 const Comp: React.FC<TableProps> = ({
   list,
-  rowKey,
   column,
+  rowKey,
   tableWidth,
   tableHeight,
+  rowSelection,
   itemHeight = 40,
+  rowHoverBg = "#dcf4ff",
+  onRowClick,
+  onRowMouseLeave,
+  onRowMouseEnter,
+  onRowDoubleClick,
 }) => {
   const scrollRef = useRef<any>();
   const contentRef = useRef<any>();
 
-  // 显示多少条数据
-  const [showData, setShowData] = useState<any[]>([]);
+  // 鼠标移至哪一行的 index
+  const [hoverIndex, setHoverIndex] = useState<number>();
+
+  // 在哪条数据开始显示
+  const [startIndex, setStartIndex] = useState(0);
+
+  // 当前显示的数据
+  const showData = useMemo(
+    () => list.slice(startIndex, startIndex + showLength),
+    [list, startIndex]
+  );
 
   // 虚拟滚动高度
   const scrollHeight = useMemo(
@@ -44,17 +97,78 @@ const Comp: React.FC<TableProps> = ({
     [itemHeight, list.length]
   );
 
+  const selectAllStatus = useMemo(() => {
+    const selectedLen = rowSelection?.selectedRowKeys.length;
+    if (!selectedLen) return <UnCheckIcon className="pointer" />;
+    if (selectedLen === list.length) return <CheckIcon className="pointer" />;
+    return <SomeCheckIcon className="pointer" />;
+  }, [list.length, rowSelection?.selectedRowKeys]);
+
+  const getSelectdColumn = useCallback(() => {
+    if (!rowSelection) return null;
+    const { selectedRowKeys, fixed, onSelect, type } = rowSelection;
+    const selectCol: ColumnProps = {
+      key: "-_-",
+      width: 60,
+      aligin: "center",
+      fixed: fixed ? "left" : undefined,
+      title: type === "checkbox" ? selectAllStatus : "",
+      render: ({ row }) => {
+        const id = row[rowKey || "id"];
+        if (type === "checkbox") {
+          // 多选
+          return selectedRowKeys.includes(id) ? (
+            <CheckIcon
+              className="pointer"
+              onClick={() => {
+                const curKeys = selectedRowKeys.filter((sid) => id !== sid);
+                onSelect?.(curKeys, false, row);
+              }}
+            />
+          ) : (
+            <UnCheckIcon
+              className="pointer"
+              onClick={() => {
+                const curKeys = Array.from(new Set([...selectedRowKeys, id]));
+                onSelect?.(curKeys, true, row);
+              }}
+            />
+          );
+        }
+        // 单选
+        return selectedRowKeys.includes(id) ? (
+          <RadioCheckIcon
+            className="pointer"
+            onClick={() => onSelect?.([], false, row)}
+          />
+        ) : (
+          <RadioUnCheckIcon
+            className="pointer"
+            onClick={() => onSelect?.([id], true, row)}
+          />
+        );
+      },
+    };
+
+    return selectCol;
+  }, [rowKey, rowSelection, selectAllStatus]);
+
   // 固定的列
   const columns = useMemo(() => {
     const left = column.filter((col) => col.fixed === "left");
     const right = column.filter((col) => col.fixed === "right");
-    const all = [...left, ...column.filter((col) => !col.fixed), ...right];
+    const center = column.filter((col) => !col.fixed);
+    // 如果列表需要选择
+    const selectCol = getSelectdColumn();
+    if (selectCol)
+      (selectCol.fixed === "left" ? left : center).unshift(selectCol);
+
+    const all = [...left, ...center, ...right];
     return { left, right, all };
-  }, [column]);
+  }, [column, getSelectdColumn]);
 
   const [contentHeight, setContentHeight] = useState(0);
   useEffect(() => {
-    setShowData(list.slice(0, showLength));
     setTimeout(() => setContentHeight(contentRef.current.clientHeight), 100);
   }, [list]);
 
@@ -62,8 +176,7 @@ const Comp: React.FC<TableProps> = ({
   const onScrollY = (e: React.UIEvent<HTMLDivElement>) => {
     scrollTop = e.currentTarget.scrollTop;
     const start = Math.round(scrollTop / itemHeight);
-    const newShowData = list.slice(start, start + showLength);
-    setShowData(newShowData);
+    setStartIndex(start);
   };
 
   // 鼠标滚轮事件
@@ -89,7 +202,9 @@ const Comp: React.FC<TableProps> = ({
           style={{ width: col.width }}
           className={classNames("col-cell", { grow1: !col.fixed })}
         >
-          <span className="text-ellipsis">{col.title}</span>
+          <span className="text-ellipsis" style={{ textAlign: col.aligin }}>
+            {col.title}
+          </span>
         </div>
       ))}
     </div>
@@ -102,7 +217,20 @@ const Comp: React.FC<TableProps> = ({
         <div
           className="col"
           key={rowKey ? row[rowKey] : rowIndex}
-          style={{ height: itemHeight }}
+          style={{
+            height: itemHeight,
+            background: hoverIndex === rowIndex ? rowHoverBg : "",
+          }}
+          onClick={(e) => onRowClick?.(row, e)}
+          onDoubleClick={(e) => onRowDoubleClick?.(row, e)}
+          onMouseEnter={(e) => {
+            setHoverIndex(rowIndex);
+            onRowMouseEnter?.(row, e);
+          }}
+          onMouseLeave={(e) => {
+            setHoverIndex(undefined);
+            onRowMouseLeave?.(row, e);
+          }}
         >
           {_cols.map((col, colIndex) => (
             <div
@@ -110,7 +238,7 @@ const Comp: React.FC<TableProps> = ({
               style={{ width: col.width }}
               className={classNames("col-cell", { grow1: !col.fixed })}
             >
-              <span className="text-ellipsis">
+              <span className="text-ellipsis" style={{ textAlign: col.aligin }}>
                 {col.render
                   ? col.render({ row, col, value: row[col.key] })
                   : row[col.key]}
@@ -139,6 +267,7 @@ const Comp: React.FC<TableProps> = ({
       </div>
     );
   };
+
   return (
     <div className="container" style={containerStyle}>
       {/* 固定的列 */}

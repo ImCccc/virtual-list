@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "./App.css";
 import { ColumnProps } from "./components/VirtualList";
 import VirtualTree from "./components/VirtualTree";
@@ -11,7 +12,18 @@ const getList = (conunt: number) => {
         children: [
           {
             address: Math.random(),
-            children: [{ address: Math.random() }],
+            children: [
+              {
+                address: Math.random(),
+                children: [
+                  { address: Math.random() },
+                  { address: Math.random() },
+                  { address: Math.random() },
+                  { address: Math.random() },
+                  { address: Math.random() },
+                ],
+              },
+            ],
           },
         ],
       },
@@ -26,28 +38,27 @@ const getList = (conunt: number) => {
 };
 
 const column: ColumnProps[] = [
-  { width: 200, fixed: "left", title: "地址", key: "address" },
+  {
+    width: 120,
+    // fixed: "left",
+    title: "uuid",
+    key: "_id",
+  },
   // { width: 100, title: "序号", key: "index" },
   // { width: 100, fixed: "right", title: "内容都是开发", key: "id" },
-  {
-    width: 200,
-    title: "地址",
-    key: "address",
-    render: ({ value }) => "xxx" + value,
-  },
+  { width: 200, title: "级别", key: "_level" },
   { width: 200, title: "地址", key: "address" },
   { width: 200, title: "地址", key: "address" },
-  // { width: 200, title: "地址", key: "address" },
-  // { width: 100, title: "嘻嘻嘻", key: "content" },
+  { width: 200, title: "地址", key: "address" },
+  { width: 100, title: "嘻嘻嘻", key: "content" },
   // { width: 150, fixed: "right", title: "内容", key: "name" },
 ];
 
 const list = getList(10);
-const tableHeight = undefined;
-const tableWidth = undefined;
-const rowKey = "address";
 
 function App() {
+  const [selectedRowKeys, setselectedRowKeys] = useState<string[]>([]);
+
   return (
     <div className="aaa">
       <div className="aaa1">aaa1</div>
@@ -56,10 +67,19 @@ function App() {
         <VirtualTree
           list={list}
           column={column}
-          rowKey={rowKey}
+          // rowKey={rowKey}
           // defaultExpandAllRows={false}
-          tableWidth={tableWidth}
-          tableHeight={tableHeight}
+          // tableWidth={tableWidth}
+          // tableHeight={400}
+          // onRowClick={(row) => console.log(row)}
+          // onRowDoubleClick={(row) => console.log(row)}
+          rowSelection={{
+            type: "radio",
+            selectedRowKeys,
+            onSelect: (selectedRowKeys) => {
+              setselectedRowKeys(selectedRowKeys);
+            },
+          }}
         />
       </div>
     </div>

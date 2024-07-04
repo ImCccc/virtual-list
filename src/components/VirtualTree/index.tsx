@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
-import VirtualList, { TableProps } from "../VirtualList";
+import { ExpandIcon, FoldIcon } from "../Icon";
+import VirtualList, { RowSelectionProps, TableProps } from "../VirtualList";
 import "./index.css";
 
 export type VirtualTreeProps = {
@@ -8,35 +9,25 @@ export type VirtualTreeProps = {
   defaultExpandAllRows?: boolean;
 };
 
-const PlusSquareOutlined: React.FC<{ onClick: any }> = ({ onClick }) => {
-  return (
-    <span className="add-icon" onClick={onClick}>
-      <span></span>
-      <span></span>
-    </span>
-  );
-};
-const MinusSquareOutlined: React.FC<{ onClick: any }> = ({ onClick }) => {
-  return (
-    <span className="add-icon" onClick={onClick}>
-      <span></span>
-    </span>
-  );
+export type TreeRowSelectionProps = RowSelectionProps & {
+  checkStrictly?: boolean; // true: 状态下节点选择完全受控（父子数据选中状态不再关联）
 };
 
+const _titleLeft = 20;
+
 // 数组打平
-const flatten = (list: any[], allList = [], parentId?: string, _level = 0) => {
+let _maxLevel = 1;
+const flatten = (list: any[], cKey = "children", allList = [], _pid = "") => {
   return [
     ...allList,
-    ...list.reduce((all, item) => {
-      item._level = _level;
-      item._parentId = parentId;
-      item._uuid = `uuid-${Math.random()}`;
-      item._hasChild = !!item.children?.length;
+    ...list.reduce((all, item, index) => {
+      item._parentId = _pid;
+      item._id = _pid ? `${_pid}-${index + 1}` : `${index + 1}`;
+      item._hasChild = !!item[cKey]?.length;
+      item._level = item._id.split("-").length;
+      _maxLevel = Math.max(_maxLevel, item._level);
       all.push(item);
-      if (item._hasChild) {
-        flatten(item.children, allList, item._uuid, _level + 1);
-      }
+      if (item._hasChild) flatten(item[cKey], cKey, allList, item._id);
       return all;
     }, allList),
   ];
@@ -46,6 +37,7 @@ const Comp: React.FC<TableProps & VirtualTreeProps> = ({
   list,
   column,
   foldSpan = 14,
+  childrenKey = "children",
   defaultExpandAllRows = true,
   ...props
 }) => {
@@ -53,60 +45,101 @@ const Comp: React.FC<TableProps & VirtualTreeProps> = ({
   const [expandRows, setExpandRows] = useState<{ [k: string]: boolean }>({});
 
   // 打平树结构
-  const flattenList = useMemo(() => flatten(list), [list]);
+  const flattenList = useMemo(
+    () => flatten(list, childrenKey),
+    [childrenKey, list]
+  );
 
+  // 获取行的收缩状态
+  const getParentCollapsedState = useCallback(
+    (pid: string) =>
+      expandRows[pid] !== undefined ? expandRows[pid] : defaultExpandAllRows,
+    [defaultExpandAllRows, expandRows]
+  );
+
+  // 当前显示的数据
   const showList = useMemo(() => {
-    return flattenList.filter((item) => {
-      const pid = item._parentId;
-      if (!pid) return true;
-      return (
-        expandRows[pid] === true ||
-        (defaultExpandAllRows && expandRows[pid] !== false)
-      );
-    });
-  }, [defaultExpandAllRows, expandRows, flattenList]);
+    const showItemIds: { [k: string]: boolean } = {};
+    const list = flattenList.reduce((showList, item) => {
+      const { _parentId, _id } = item;
+      if (!_parentId) {
+        // 顶层都显示
+        item._show = true;
+        showItemIds[_id] = true;
+        showList.push(item);
+      } else if (showItemIds[_parentId] && getParentCollapsedState(_parentId)) {
+        // 父亲是显示状态, 并且父亲没有折叠起来
+        showItemIds[_id] = true;
+        showList.push(item);
+      }
+      return showList;
+    }, []);
+    return list;
+  }, [flattenList, getParentCollapsedState]);
 
-  const _onClick = useCallback(
-    (uuid: string, expand: boolean) => {
-      setExpandRows({ ...expandRows, [uuid]: expand });
-    },
+  // 树收缩折叠
+  const onExpandRow = useCallback(
+    (uuid: string, expand: boolean) =>
+      setExpandRows({ ...expandRows, [uuid]: expand }),
     [expandRows]
   );
 
   const getExpandIcon = useCallback(
-    (uuid: string) => {
-      return expandRows[uuid] === true ||
-        (defaultExpandAllRows && expandRows[uuid] !== false) ? (
-        // 当前状态是展开， 显示收缩 icon
-        <MinusSquareOutlined onClick={() => _onClick(uuid, false)} />
+    (_id: string) =>
+      getParentCollapsedState(_id) ? (
+        <ExpandIcon
+          className="add-icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            onExpandRow(_id, false);
+          }}
+        />
       ) : (
-        // 当前状态是收起来，或者默认是收起来并且没有操作过
-        <PlusSquareOutlined onClick={() => _onClick(uuid, true)} />
-      );
-    },
-    [_onClick, defaultExpandAllRows, expandRows]
+        <FoldIcon
+          className="add-icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            onExpandRow(_id, true);
+          }}
+        />
+      ),
+    [getParentCollapsedState, onExpandRow]
   );
 
   const treeColumn = useMemo(() => {
-    return column.map((col, index) => {
+    const _column = column.map((col, index) => {
       if (index) return col;
-      const _col = col;
-      _col.render = ({ value, row }) => {
+      const _col = { ...col };
+      const _render = _col.render;
+      _col.render = (data) => {
+        const { value, row } = data;
         return (
           <span
-            className="fold-box"
-            style={{ marginLeft: `${row._level * foldSpan}px` }}
+            style={{
+              position: "relative",
+              marginLeft: row._level * foldSpan,
+            }}
           >
-            {row._hasChild && getExpandIcon(row._uuid)}
-            <span className="fold-value">{value}</span>
+            {row._hasChild && getExpandIcon(row._id)}
+            <span style={{ marginLeft: _titleLeft }}>
+              {_render ? _render(data) : value}
+            </span>
           </span>
         );
       };
       return _col;
     });
+
+    // 重置折叠的宽度, 保证所有子选项都能显示
+    _column[0].width =
+      (_column[0].width || 60) + _maxLevel * foldSpan + _titleLeft * 2;
+
+    return _column;
   }, [column, foldSpan, getExpandIcon]);
 
-  return <VirtualList column={treeColumn} list={showList} {...props} />;
+  return (
+    <VirtualList rowKey="_id" column={treeColumn} list={showList} {...props} />
+  );
 };
 
 export default Comp;

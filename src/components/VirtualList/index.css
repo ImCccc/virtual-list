@@ -23,6 +23,7 @@
 .col {
   display: flex;
   position: relative;
+  background: #fff;
 }
 
 .text-ellipsis {
@@ -38,7 +39,6 @@
   min-width: 60px;
   display: flex;
   align-items: center;
-  background-color: #fff;
   border-right: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
 }
@@ -60,4 +60,8 @@
   flex-shrink: 0;
   display: flex;
   overflow: auto;
+}
+
+.pointer {
+  cursor: pointer;
 }
