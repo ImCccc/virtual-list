@@ -17,31 +17,29 @@ export type ColumnProps = {
   aligin?: "left" | "center" | "right";
   render?: (props: { value: any; row: any; col: any }) => React.ReactNode;
 };
-
+export type SelectKeysProps = string[];
 export type EventProps = (
   record: any,
   event: React.MouseEvent<HTMLDivElement, MouseEvent>
 ) => void;
-
-export type SelectedKeysProps = string[];
 export type OnSelectProps = (
-  selectedRowKeys: SelectedKeysProps,
+  electedRowKeys: SelectKeysProps,
   selected: boolean,
   record: any
 ) => void;
 export type OnSelectAllProps = (
   selected: boolean,
-  allRowKeys: SelectedKeysProps
+  allRowKeys: SelectKeysProps
 ) => void;
 export type RowSelectionProps = {
-  selectedRowKeys: SelectedKeysProps; // 选中项的 key 数组，需要和 onChange 进行配合
+  selectedRowKeys: SelectKeysProps; // 选中项的 key 数组，需要和 onChange 进行配合
+  type?: "checkbox" | "radio"; // 多选/单选
   fixed?: boolean; // 把选择框列固定在左边
   hideSelectAll?: boolean; // 隐藏全选勾选框
-  type?: "checkbox" | "radio"; // 多选/单选
+  disabledKeys?: SelectKeysProps; // 禁止用户操作的行
   onSelect?: OnSelectProps; // 用户手动选择/取消选择某行的回调
   onSelectAll?: OnSelectAllProps; // 用户手动选择/取消选择所有行的回调
 };
-
 export type TableProps = {
   list: any[];
   rowKey?: string;
@@ -71,7 +69,7 @@ const Comp: React.FC<TableProps> = ({
   rowSelection,
   rowKey = "",
   itemHeight = 40,
-  rowHoverBg = "#dcf4ff",
+  rowHoverBg = "#f0faff",
   rowSelectedBg = "#dcf4ff",
   onRowClick,
   onRowMouseLeave,
@@ -108,28 +106,43 @@ const Comp: React.FC<TableProps> = ({
 
   const getSelectdColumn = useCallback(() => {
     if (!rowSelection) return null;
-    const { selectedRowKeys, fixed, onSelect, type } = rowSelection;
+    const {
+      fixed,
+      onSelect,
+      disabledKeys,
+      hideSelectAll,
+      selectedRowKeys,
+      type = "checkbox",
+    } = rowSelection;
+
+    const title =
+      type === "checkbox" && hideSelectAll !== true && selectAllStatus;
+
     const selectCol: ColumnProps = {
-      key: "-_-",
+      title,
       width: 60,
+      key: "_selectd",
       aligin: "center",
       fixed: fixed ? "left" : undefined,
-      title: type === "checkbox" ? selectAllStatus : "",
       render: ({ row }) => {
         const id = row[rowKey || "id"];
+        const disabled = disabledKeys?.includes(id);
+
         if (type === "checkbox") {
           // 多选
           return selectedRowKeys.includes(id) ? (
             <CheckIcon
               className="pointer"
+              disabled={disabled}
               onClick={() => {
-                const curKeys = selectedRowKeys.filter((sid) => id !== sid);
+                const curKeys = selectedRowKeys.filter((_id) => id !== _id);
                 onSelect?.(curKeys, false, row);
               }}
             />
           ) : (
             <UnCheckIcon
               className="pointer"
+              disabled={disabled}
               onClick={() => {
                 const curKeys = Array.from(new Set([...selectedRowKeys, id]));
                 onSelect?.(curKeys, true, row);
@@ -141,12 +154,22 @@ const Comp: React.FC<TableProps> = ({
         return selectedRowKeys.includes(id) ? (
           <RadioCheckIcon
             className="pointer"
-            onClick={() => onSelect?.([], false, row)}
+            disabled={disabled}
+            onClick={() => {
+              // 禁止操作的id, 刚好被选中
+              if (disabledKeys?.includes(selectedRowKeys[0])) return;
+              onSelect?.([], false, row);
+            }}
           />
         ) : (
           <RadioUnCheckIcon
             className="pointer"
-            onClick={() => onSelect?.([id], true, row)}
+            disabled={disabled}
+            onClick={() => {
+              // 禁止操作的id, 刚好被选中
+              if (disabledKeys?.includes(selectedRowKeys[0])) return;
+              onSelect?.([id], true, row);
+            }}
           />
         );
       },

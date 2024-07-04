@@ -90,7 +90,7 @@ const Comp: React.FC<TableProps & VirtualTreeProps> = ({
         <ExpandIcon
           className="add-icon"
           onClick={(e) => {
-            e.stopPropagation();
+            e?.stopPropagation();
             onExpandRow(_id, false);
           }}
         />
@@ -98,7 +98,7 @@ const Comp: React.FC<TableProps & VirtualTreeProps> = ({
         <FoldIcon
           className="add-icon"
           onClick={(e) => {
-            e.stopPropagation();
+            e?.stopPropagation();
             onExpandRow(_id, true);
           }}
         />

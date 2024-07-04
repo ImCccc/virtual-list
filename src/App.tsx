@@ -57,7 +57,7 @@ const column: ColumnProps[] = [
 const list = getList(10);
 
 function App() {
-  const [selectedRowKeys, setselectedRowKeys] = useState<string[]>([]);
+  const [selectedRowKeys, setselectedRowKeys] = useState<string[]>(["1"]);
 
   return (
     <div className="aaa">
@@ -77,6 +77,8 @@ function App() {
             type: "radio",
             fixed: true,
             selectedRowKeys,
+            // hideSelectAll: true,
+            disabledKeys: ["1-1"],
             onSelect: (selectedRowKeys) => {
               setselectedRowKeys(selectedRowKeys);
             },
