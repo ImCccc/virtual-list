@@ -3,36 +3,50 @@ import "./App.css";
 import { ColumnProps } from "./components/VirtualList";
 import VirtualTree from "./components/VirtualTree";
 
+let index = 1;
 const getList = (conunt: number) => {
   return new Array(conunt).fill(0).map(() => ({
-    address: Math.random(),
+    address: index++ + "---" + Math.random(),
     children: [
       {
-        address: Math.random(),
+        address: index++ + "---" + Math.random(),
         children: [
           {
-            address: Math.random(),
-            children: [
-              {
-                address: Math.random(),
-                children: [
-                  { address: Math.random() },
-                  { address: Math.random() },
-                  { address: Math.random() },
-                  { address: Math.random() },
-                  { address: Math.random() },
-                ],
-              },
-            ],
+            address: index++ + "---" + Math.random(),
           },
         ],
       },
       {
-        address: Math.random(),
-        children: [{ address: Math.random() }],
+        address: index++ + "---" + Math.random(),
+        children: [
+          { address: index++ + "---" + Math.random() },
+          {
+            address: index++ + "---" + Math.random(),
+          },
+          { address: index++ + "---" + Math.random() },
+          { address: index++ + "---" + Math.random() },
+        ],
       },
-      { address: Math.random() },
-      { address: Math.random() },
+      {
+        address: index++ + "---" + Math.random(),
+        children: [
+          { address: index++ + "---" + Math.random() },
+          { address: index++ + "---" + Math.random() },
+          { address: index++ + "---" + Math.random() },
+          { address: index++ + "---" + Math.random() },
+        ],
+      },
+      { address: index++ + "---" + Math.random() },
+      {
+        address: index++ + "---" + Math.random(),
+        children: [
+          { address: index++ + "---" + Math.random() },
+          { address: index++ + "---" + Math.random() },
+          { address: index++ + "---" + Math.random() },
+          { address: index++ + "---" + Math.random() },
+        ],
+      },
+      { address: index++ + "---" + Math.random() },
     ],
   }));
 };
@@ -51,7 +65,7 @@ const column: ColumnProps[] = [
   { width: 200, title: "地址", key: "address" },
   { width: 200, title: "地址", key: "address" },
   { width: 100, title: "嘻嘻嘻", key: "content" },
-  // { width: 150, fixed: "right", title: "内容", key: "name" },
+  { width: 150, fixed: "right", title: "内容", key: "name" },
 ];
 
 const list = getList(10);
@@ -67,8 +81,8 @@ function App() {
         column={column}
         // rowKey={rowKey}
         // defaultExpandAllRows={false}
-        tableWidth={800}
-        tableHeight={400}
+        // tableWidth={800}
+        // tableHeight={400}
         // onRowClick={(row) => console.log(row)}
         // onRowDoubleClick={(row) => console.log(row)}
         rowSelection={{
