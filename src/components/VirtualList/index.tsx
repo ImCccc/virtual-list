@@ -333,10 +333,7 @@ const Comp: React.FC<TableProps> = ({
     ));
   };
 
-  const getFixedCol = (
-    _column: ColumnProps[],
-    fixed: ColumnProps["fixed"] = "left"
-  ) => {
+  const getFixedCol = (_column: ColumnProps[], fixed: ColumnProps["fixed"]) => {
     return (
       _column.length && (
         <div
