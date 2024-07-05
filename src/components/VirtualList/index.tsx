@@ -333,12 +333,15 @@ const Comp: React.FC<TableProps> = ({
     ));
   };
 
-  const getFixedCol = (_column: ColumnProps[], fixed: ColumnProps["fixed"]) => {
+  const getFixedCol = (
+    _column: ColumnProps[],
+    fixed: ColumnProps["fixed"] = "left"
+  ) => {
     return (
       _column.length && (
         <div
           onWheel={onWheel}
-          className="table-content table-fixed"
+          className={`table-content table-fixed ${fixed}`}
           style={
             fixed === "right"
               ? { height: contentHeight, right: scrollWidth }

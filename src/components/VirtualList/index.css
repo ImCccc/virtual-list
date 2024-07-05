@@ -18,7 +18,12 @@
   position: absolute;
   top: 0;
   z-index: 2;
-  box-shadow: 1px -3px 6px 0px #cbcbcb;
+}
+.table-fixed.left{
+  box-shadow: 1px 0px 8px 0px #c1c1c1;
+}
+.table-fixed.right {
+  box-shadow:-2px 0px 8px 0px #c1c1c1
 }
 
 .col {
