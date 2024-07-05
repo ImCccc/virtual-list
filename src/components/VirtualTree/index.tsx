@@ -23,6 +23,7 @@ const _titleLeft = 20;
 // 数组打平
 let _maxLevel = 1;
 const flatten = (list: any[], cKey = "children", allList = [], _pid = "") => {
+  if (!allList.length) _maxLevel = 1;
   return [
     ...allList,
     ...list.reduce((all, item, index) => {
