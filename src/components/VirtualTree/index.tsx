@@ -162,31 +162,24 @@ const Comp: React.FC<TableProps & VirtualTreeProps> = ({
     [flattenList, rowKey]
   );
 
+  // 重写 onSelect
   const treeRowSelection = useMemo<TreeRowSelectionProps | undefined>(() => {
     if (!rowSelection) return;
-    const {
-      onSelect,
-      disabledKeys,
-      selectedRowKeys,
-      checkStrictly = true,
-      ...props
-    } = rowSelection;
+    const { onSelect, checkStrictly = true, ...props } = rowSelection;
     return {
       onSelect: (curKeys, check, row) => {
-        if (!checkStrictly || !row._hasChild) {
+        if (!checkStrictly || !row._hasChild || props.type === "radio") {
           return onSelect?.(curKeys, check, row);
         }
-        const childrenIds = getChildren(row, disabledKeys || []);
+        const childrenIds = getChildren(row, props.disabledKeys || []);
         onSelect?.(
           check
-            ? [...new Set([...selectedRowKeys, ...childrenIds])]
-            : selectedRowKeys.filter((id) => !childrenIds.includes(id)),
+            ? [...new Set([...props.selectedRowKeys, ...childrenIds])]
+            : props.selectedRowKeys.filter((id) => !childrenIds.includes(id)),
           check,
           row
         );
       },
-      selectedRowKeys,
-      disabledKeys,
       ...props,
     };
   }, [getChildren, rowSelection]);

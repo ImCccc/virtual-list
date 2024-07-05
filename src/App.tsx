@@ -57,39 +57,39 @@ const column: ColumnProps[] = [
 const list = getList(10);
 
 function App() {
-  const defval = ["1-1"];
+  const defval: any = [];
   const [selectedRowKeys, setselectedRowKeys] = useState<string[]>(defval);
 
   return (
     <div className="aaa">
-      <div className="aaa1">aaa1</div>
+      <VirtualTree
+        list={list}
+        column={column}
+        // rowKey={rowKey}
+        // defaultExpandAllRows={false}
+        tableWidth={800}
+        tableHeight={400}
+        // onRowClick={(row) => console.log(row)}
+        // onRowDoubleClick={(row) => console.log(row)}
+        rowSelection={{
+          type: "radio",
+          fixed: true,
+          selectedRowKeys,
+          // hideSelectAll: true,
+          disabledKeys: ["1-1", "1-1-1", "1-1-1-1-1"],
+          onSelect: (selectedRowKeys) => {
+            setselectedRowKeys(selectedRowKeys);
+          },
+          onSelectAll: (allRowKeys) => {
+            setselectedRowKeys(allRowKeys);
+            // console.log(selected, allRowKeys);
+          },
+        }}
+      />
+      {/* <div className="aaa1">aaa1</div>
       <div className="aaa2">
         <div className="aaa3">aaa3</div>
-        <VirtualTree
-          list={list}
-          column={column}
-          // rowKey={rowKey}
-          // defaultExpandAllRows={false}
-          // tableWidth={tableWidth}
-          // tableHeight={400}
-          // onRowClick={(row) => console.log(row)}
-          // onRowDoubleClick={(row) => console.log(row)}
-          rowSelection={{
-            // type: "radio",
-            fixed: true,
-            selectedRowKeys,
-            // hideSelectAll: true,
-            disabledKeys: ["1-1", "1-1-1", "1-1-1-1-1"],
-            onSelect: (selectedRowKeys) => {
-              setselectedRowKeys(selectedRowKeys);
-            },
-            onSelectAll: (allRowKeys) => {
-              setselectedRowKeys(allRowKeys);
-              // console.log(selected, allRowKeys);
-            },
-          }}
-        />
-      </div>
+      </div> */}
     </div>
   );
 }
