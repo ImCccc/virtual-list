@@ -79,13 +79,13 @@ function App() {
             fixed: true,
             selectedRowKeys,
             // hideSelectAll: true,
-            disabledKeys: ["1-1"],
+            disabledKeys: ["1-1", "1-1-1", "1-1-1-1-1"],
             onSelect: (selectedRowKeys) => {
               setselectedRowKeys(selectedRowKeys);
             },
-            onSelectAll: (selected, allRowKeys) => {
+            onSelectAll: (allRowKeys) => {
               setselectedRowKeys(allRowKeys);
-              console.log(selected, allRowKeys);
+              // console.log(selected, allRowKeys);
             },
           }}
         />

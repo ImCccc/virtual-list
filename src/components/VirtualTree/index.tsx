@@ -1,11 +1,16 @@
 import { useCallback, useMemo, useState } from "react";
 import { ExpandIcon, FoldIcon } from "../Icon";
-import VirtualList, { RowSelectionProps, TableProps } from "../VirtualList";
+import VirtualList, {
+  RowSelectionProps,
+  SelectKeysProps,
+  TableProps,
+} from "../VirtualList";
 import "./index.css";
 
 export type VirtualTreeProps = {
   foldSpan?: number;
   childrenKey?: string;
+  rowSelection?: TreeRowSelectionProps;
   defaultExpandAllRows?: boolean;
 };
 
@@ -37,6 +42,8 @@ const Comp: React.FC<TableProps & VirtualTreeProps> = ({
   list,
   column,
   foldSpan = 14,
+  rowSelection,
+  rowKey = "_id",
   childrenKey = "children",
   defaultExpandAllRows = true,
   ...props
@@ -64,7 +71,6 @@ const Comp: React.FC<TableProps & VirtualTreeProps> = ({
       const { _parentId, _id } = item;
       if (!_parentId) {
         // 顶层都显示
-        item._show = true;
         showItemIds[_id] = true;
         showList.push(item);
       } else if (showItemIds[_parentId] && getParentCollapsedState(_parentId)) {
@@ -137,8 +143,63 @@ const Comp: React.FC<TableProps & VirtualTreeProps> = ({
     return _column;
   }, [column, foldSpan, getExpandIcon]);
 
+  const getChildren = useCallback(
+    (row: any, disabledKeys: SelectKeysProps) => {
+      let sInx =
+        flattenList.findIndex((item) => item[rowKey] === row[rowKey]) + 1;
+      const maxlevel = flattenList[sInx]._level;
+      const childrenIds: SelectKeysProps = [row[rowKey]];
+      for (sInx; sInx < flattenList.length; sInx++) {
+        const curLevel = flattenList[sInx]._level;
+        if (curLevel < maxlevel) break;
+        const cid = flattenList[sInx][rowKey];
+        // 过滤禁止操作的数据
+        if (!disabledKeys.includes(cid))
+          childrenIds.push(flattenList[sInx][rowKey]);
+      }
+      return childrenIds;
+    },
+    [flattenList, rowKey]
+  );
+
+  const treeRowSelection = useMemo<TreeRowSelectionProps | undefined>(() => {
+    if (!rowSelection) return;
+    const {
+      onSelect,
+      disabledKeys,
+      selectedRowKeys,
+      checkStrictly = true,
+      ...props
+    } = rowSelection;
+    return {
+      onSelect: (curKeys, check, row) => {
+        if (!checkStrictly || !row._hasChild) {
+          return onSelect?.(curKeys, check, row);
+        }
+        const childrenIds = getChildren(row, disabledKeys || []);
+        onSelect?.(
+          check
+            ? [...new Set([...selectedRowKeys, ...childrenIds])]
+            : selectedRowKeys.filter((id) => !childrenIds.includes(id)),
+          check,
+          row
+        );
+      },
+      selectedRowKeys,
+      disabledKeys,
+      ...props,
+    };
+  }, [getChildren, rowSelection]);
+
   return (
-    <VirtualList rowKey="_id" column={treeColumn} list={showList} {...props} />
+    <VirtualList
+      rowKey={rowKey}
+      list={showList}
+      column={treeColumn}
+      treeList={flattenList}
+      rowSelection={treeRowSelection}
+      {...props}
+    />
   );
 };
 

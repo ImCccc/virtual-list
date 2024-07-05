@@ -28,8 +28,8 @@ export type OnSelectProps = (
   record: any
 ) => void;
 export type OnSelectAllProps = (
-  selected: boolean,
-  allRowKeys: SelectKeysProps
+  allRowKeys: SelectKeysProps,
+  selected: boolean
   // changeRowKeys: SelectKeysProps
 ) => void;
 export type RowSelectionProps = {
@@ -42,19 +42,20 @@ export type RowSelectionProps = {
   onSelectAll?: OnSelectAllProps; // 用户手动选择/取消选择所有行的回调
 };
 export type TableProps = {
-  list: any[];
+  list: any[]; // 数据
   rowKey?: string;
   column: ColumnProps[];
-  itemHeight?: number;
   tableHeight?: number;
   tableWidth?: number;
-  rowHoverBg?: string;
-  rowSelectedBg?: string;
-  rowSelection?: RowSelectionProps;
-  onRowClick?: EventProps;
-  onRowMouseEnter?: EventProps;
-  onRowMouseLeave?: EventProps;
-  onRowDoubleClick?: EventProps;
+  itemHeight?: number; // 行高
+  treeList?: any[]; // 树结构的数据,全选需要用到
+  rowHoverBg?: string; // 鼠标移至行的背景颜色
+  rowSelectedBg?: string; // 选中行的背景颜色
+  rowSelection?: RowSelectionProps; // 选择行的配置
+  onRowClick?: EventProps; // 点击行
+  onRowMouseEnter?: EventProps; // 双击行
+  onRowMouseLeave?: EventProps; // 鼠标移至行
+  onRowDoubleClick?: EventProps; // 鼠标离开行
 };
 
 const scrollWidth = 20;
@@ -65,6 +66,7 @@ let scrollTop = 0;
 const Comp: React.FC<TableProps> = ({
   list,
   column,
+  treeList,
   tableWidth,
   tableHeight,
   rowSelection,
@@ -112,29 +114,46 @@ const Comp: React.FC<TableProps> = ({
     if (!rowSelection) return;
     const { selectedRowKeys, onSelectAll, disabledKeys } = rowSelection;
     const selectedLen = selectedRowKeys.length;
-    const allKeys = list
-      .map((item) => item[rowKey])
-      .filter((id) => selectedKeysObj[id] || !disabledKeys?.includes(id));
 
-    const checkAll = () => onSelectAll?.(true, allKeys);
+    // 过滤掉 disabled 的所有选项, 如果是树结构, 当前列表不会包含收缩起来的行, 所以使用传递进来的treeList
+    const filterDisabledKeys = (treeList || list)
+      .map((item) => item[rowKey])
+      .filter((id) => !disabledKeys?.includes(id));
+
+    // disabled 并且被选中的选项
+    const disabledCheckKeys =
+      disabledKeys?.filter((id) => selectedKeysObj[id]) || [];
+
+    // 全选, 需要过滤掉 disabled 并且未选中的选项,
+    // 有时候 selectedRowKeys 中的选项并不在列表中, 也要包含
+    const checkAll = () => {
+      onSelectAll?.(
+        [...new Set([...filterDisabledKeys, ...selectedRowKeys])],
+        true
+      );
+    };
+
+    // 判断是否全选, disabled 的选项忽略
+    const isCheckAll = filterDisabledKeys.every((id) => selectedKeysObj[id]);
+
     if (!selectedLen) {
       // 完全未选择
       return <UnCheckIcon className="pointer" onClick={checkAll} />;
     }
-    if (selectedLen !== allKeys.length) {
-      // 选择了一些
-      return <SomeCheckIcon className="pointer" onClick={checkAll} />;
-    }
-    const disabledCheckKeys =
-      disabledKeys?.filter((id) => selectedKeysObj[id]) || [];
-    return (
+
+    if (isCheckAll) {
       // 已经全选
-      <CheckIcon
-        className="pointer"
-        onClick={() => onSelectAll?.(true, disabledCheckKeys)}
-      />
-    );
-  }, [list, rowKey, rowSelection, selectedKeysObj]);
+      return (
+        <CheckIcon
+          className="pointer"
+          onClick={() => onSelectAll?.(disabledCheckKeys, false)}
+        />
+      );
+    }
+
+    // 选择了一些
+    return <SomeCheckIcon className="pointer" onClick={checkAll} />;
+  }, [list, rowKey, rowSelection, selectedKeysObj, treeList]);
 
   const getSelectdColumn = useCallback(() => {
     if (!rowSelection) return null;
@@ -176,7 +195,7 @@ const Comp: React.FC<TableProps> = ({
             <UnCheckIcon
               {...iconProps}
               onClick={() => {
-                const curKeys = Array.from(new Set([...selectedRowKeys, id]));
+                const curKeys = [...selectedRowKeys, id];
                 onSelect?.(curKeys, true, row);
               }}
             />
