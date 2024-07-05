@@ -358,7 +358,7 @@ const Comp: React.FC<TableProps> = ({
     const resize = () => setContentHeight(contentRef.current.clientHeight);
     window.addEventListener("resize", resize);
     return () => window.removeEventListener("resize", resize);
-  }, [list]);
+  }, []);
 
   return (
     <div className="container" style={containerStyle}>
