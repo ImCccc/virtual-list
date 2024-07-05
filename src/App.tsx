@@ -76,33 +76,33 @@ function App() {
 
   return (
     <div className="aaa">
-      <VirtualTree
-        list={list}
-        column={column}
-        // rowKey={rowKey}
-        // defaultExpandAllRows={false}
-        // tableWidth={800}
-        // tableHeight={400}
-        // onRowClick={(row) => console.log(row)}
-        // onRowDoubleClick={(row) => console.log(row)}
-        rowSelection={{
-          // type: "radio",
-          // hideSelectAll: true,
-          fixed: true,
-          selectedRowKeys,
-          disabledKeys: ["1-1", "1-1-1", "1-1-1-1-1"],
-          onSelect: (selectedRowKeys) => {
-            setselectedRowKeys(selectedRowKeys);
-          },
-          onSelectAll: (allRowKeys) => {
-            setselectedRowKeys(allRowKeys);
-          },
-        }}
-      />
-      {/* <div className="aaa1">aaa1</div>
+      <div className="aaa1">aaa1</div>
       <div className="aaa2">
         <div className="aaa3">aaa3</div>
-      </div> */}
+        <VirtualTree
+          list={list}
+          column={column}
+          // rowKey={rowKey}
+          // defaultExpandAllRows={false}
+          // tableWidth={800}
+          // tableHeight={400}
+          // onRowClick={(row) => console.log(row)}
+          // onRowDoubleClick={(row) => console.log(row)}
+          rowSelection={{
+            // type: "radio",
+            // hideSelectAll: true,
+            fixed: true,
+            selectedRowKeys,
+            disabledKeys: ["1-1", "1-1-1", "1-1-1-1-1"],
+            onSelect: (selectedRowKeys) => {
+              setselectedRowKeys(selectedRowKeys);
+            },
+            onSelectAll: (allRowKeys) => {
+              setselectedRowKeys(allRowKeys);
+            },
+          }}
+        />
+      </div>
     </div>
   );
 }

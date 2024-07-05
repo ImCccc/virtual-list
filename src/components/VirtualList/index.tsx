@@ -97,7 +97,7 @@ const Comp: React.FC<TableProps> = ({
 
   // 虚拟滚动高度
   const scrollHeight = useMemo(
-    () => list.length * itemHeight,
+    () => list.length * itemHeight + itemHeight + 20,
     [itemHeight, list.length]
   );
 
@@ -242,11 +242,6 @@ const Comp: React.FC<TableProps> = ({
     return { left, right, all };
   }, [column, getSelectdColumn]);
 
-  const [contentHeight, setContentHeight] = useState(0);
-  useEffect(() => {
-    setTimeout(() => setContentHeight(contentRef.current.clientHeight), 100);
-  }, [list]);
-
   // 滚动Y轴
   const onScrollY = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
@@ -357,6 +352,14 @@ const Comp: React.FC<TableProps> = ({
     );
   };
 
+  const [contentHeight, setContentHeight] = useState(0);
+  useEffect(() => {
+    setTimeout(() => setContentHeight(contentRef.current.clientHeight), 100);
+    const resize = () => setContentHeight(contentRef.current.clientHeight);
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, [list]);
+
   return (
     <div className="container" style={containerStyle}>
       {/* 固定的列 */}
@@ -378,7 +381,7 @@ const Comp: React.FC<TableProps> = ({
         onScroll={onScrollY}
         style={{ width: scrollWidth }}
       >
-        <div style={{ height: scrollHeight + itemHeight + 20 }}></div>
+        <div style={{ height: scrollHeight }}></div>
       </div>
     </div>
   );
