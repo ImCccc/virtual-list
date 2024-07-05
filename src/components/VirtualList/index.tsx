@@ -61,7 +61,6 @@ export type TableProps = {
 const scrollWidth = 20;
 // 真实dom的条数
 const showLength = 20;
-let scrollTop = 0;
 
 const Comp: React.FC<TableProps> = ({
   list,
@@ -84,6 +83,8 @@ const Comp: React.FC<TableProps> = ({
 
   // 鼠标移至哪一行的 index
   const [hoverIndex, setHoverIndex] = useState<number>();
+
+  const scrollTop = useRef(0);
 
   // 在哪条数据开始显示
   const [startIndex, setStartIndex] = useState(0);
@@ -247,18 +248,24 @@ const Comp: React.FC<TableProps> = ({
   }, [list]);
 
   // 滚动Y轴
-  const onScrollY = (e: React.UIEvent<HTMLDivElement>) => {
-    scrollTop = e.currentTarget.scrollTop;
-    const start = Math.round(scrollTop / itemHeight);
-    setStartIndex(start);
-  };
+  const onScrollY = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      scrollTop.current = e.currentTarget.scrollTop;
+      setStartIndex(Math.round(scrollTop.current / itemHeight));
+    },
+    [itemHeight]
+  );
 
   // 鼠标滚轮事件
-  const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    let top = Math.min(scrollTop + itemHeight, list.length * itemHeight);
-    if (e.deltaY < 1) top = Math.max(0, scrollTop - itemHeight);
-    scrollRef.current.scrollTop = top;
-  };
+  const onWheel = useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      const curScrollTop = scrollTop.current;
+      let top = Math.min(curScrollTop + itemHeight, list.length * itemHeight);
+      if (e.deltaY < 1) top = Math.max(0, curScrollTop - itemHeight);
+      scrollRef.current.scrollTop = top;
+    },
+    [itemHeight, list.length]
+  );
 
   // 不传组件高度就使用 flex-grow: 1 自适应
   const containerStyle = useMemo<React.CSSProperties>(() => {
@@ -332,20 +339,21 @@ const Comp: React.FC<TableProps> = ({
   };
 
   const getFixedCol = (_column: ColumnProps[], fixed: ColumnProps["fixed"]) => {
-    if (!_column.length) return <></>;
     return (
-      <div
-        onWheel={onWheel}
-        className="table-content table-fixed"
-        style={
-          fixed === "right"
-            ? { height: contentHeight, right: scrollWidth }
-            : { height: contentHeight, left: 0 }
-        }
-      >
-        {getTableHeader(_column)}
-        {getTableColumn(_column)}
-      </div>
+      _column.length && (
+        <div
+          onWheel={onWheel}
+          className="table-content table-fixed"
+          style={
+            fixed === "right"
+              ? { height: contentHeight, right: scrollWidth }
+              : { height: contentHeight, left: 0 }
+          }
+        >
+          {getTableHeader(_column)}
+          {getTableColumn(_column)}
+        </div>
+      )
     );
   };
 

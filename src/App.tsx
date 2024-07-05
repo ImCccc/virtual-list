@@ -87,16 +87,15 @@ function App() {
         // onRowDoubleClick={(row) => console.log(row)}
         rowSelection={{
           // type: "radio",
+          // hideSelectAll: true,
           fixed: true,
           selectedRowKeys,
-          // hideSelectAll: true,
           disabledKeys: ["1-1", "1-1-1", "1-1-1-1-1"],
           onSelect: (selectedRowKeys) => {
             setselectedRowKeys(selectedRowKeys);
           },
           onSelectAll: (allRowKeys) => {
             setselectedRowKeys(allRowKeys);
-            // console.log(selected, allRowKeys);
           },
         }}
       />
